@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.venv/
+.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
+error_log*.txt
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temp files
+*.tmp
+*.temp
+
+# Docker
+.docker/
+
+# Large files
+*.mp4
+*.mkv
+*.avi
+*.mov
+*.webm
+
+# Secrets (update docker-compose.yml with your own keys!)
+# Note: docker-compose.yml contains example keys that should be changed
