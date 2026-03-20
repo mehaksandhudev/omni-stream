@@ -6,22 +6,29 @@
 
 A scalable, containerized REST API that enhances the capabilities of `yt-dlp` by providing a dynamic interface to download YouTube media and securely stream the output directly to MinIO/AWS S3. It ensures you always have the latest features and bug fixes by **automatically updating `yt-dlp` on every container start**, offering a truly robust backend for your data pipelines.
 
-## 📖 Table of Contents
+---
+
+## 📑 Table of Contents
 - [✨ Features](#-features)
+- [📦 Disk Space](#-disk-space)
 - [🚀 Quick Start](#-quick-start)
-- [📡 API Reference](#-api-reference)
-  - [`POST /download`](#post-download)
-  - [`GET /info?url=...`](#get-infourl)
-  - [`GET /health`](#get-health)
-  - [`GET /version`](#get-version)
-- [⚙️ Environment Variables](#️-environment-variables)
+- [🔌 API Endpoints](#-api-endpoints)
+- [📥 Downloading Media](#-downloading-media)
+- [ℹ️ Fetching Metadata](#️-fetching-metadata)
+- [📊 Sample Response](#-sample-response)
+- [🖥️ System Requirements](#️-system-requirements)
+- [🔧 Configuration](#-configuration)
+- [🚀 Deploy to Production](#-deploy-to-production)
+- [🔄 Integration with Other Services](#-integration-with-other-services)
 - [🔗 n8n Integration](#-n8n-integration)
-- [🐳 Docker Hub](#-docker-hub)
-- [🛠️ Development](#️-development)
+- [📁 Project Structure](#-project-structure)
+- [🤝 Contributing & Support](#-contributing--support)
+- [🛠️ Troubleshooting & FAQ](#️-troubleshooting--faq)
 - [📄 License](#-license)
 
-## ✨ Features
+---
 
+## ✨ Features
 - **Download & Upload** — Downloads YouTube videos and uploads directly to MinIO/S3
 - **Quality Selection** — Choose from `best`, `1080p`, `720p`, `480p`, `360p`
 - **Audio-Only Mode** — Extract audio as MP3 (`audio_only`)
@@ -36,11 +43,21 @@ A scalable, containerized REST API that enhances the capabilities of `yt-dlp` by
 
 ---
 
+## 📦 Disk Space
+| Component | Size |
+|---|---|
+| Docker image (total) | **~350 MB** |
+| Python 3.10 slim base | ~150 MB |
+| ffmpeg + yt-dlp + deps | ~199 MB |
+| Application code | < 1 MB |
+
+---
+
 ## 🚀 Quick Start
 
-### Option 1: Docker Run (Fastest)
-
+**Option A: Pull from Docker Hub (Recommended)**
 ```bash
+docker pull mehakxsandhu/youtube-download-api:latest
 docker run -d \
   --name youtube-download-api \
   -p 5002:5002 \
@@ -51,37 +68,33 @@ docker run -d \
   mehakxsandhu/youtube-download-api:latest
 ```
 
-### Option 2: Docker Compose
+**Option B: Build from source**
+```bash
+git clone https://github.com/mehaksandhudev/youtube-download-api.git
+cd youtube-download-api
+docker-compose up -d --build
+```
 
-1. Clone the repo:
-   ```bash
-   git clone https://github.com/mehaksandhudev/youtube-download-api.git
-   cd youtube-download-api
-   ```
-
-2. Create your `.env` file:
-   ```bash
-   cp .env.example .env
-   # Edit .env with your MinIO/S3 credentials
-   ```
-
-3. Start the service:
-   ```bash
-   docker-compose up -d --build
-   ```
-
-4. Verify it's running:
-   ```bash
-   curl http://localhost:5002/health
-   ```
+**Verify the container is running smoothly:**
+```bash
+curl http://localhost:5002/health
+```
 
 ---
 
-## 📡 API Reference
+## 🔌 API Endpoints
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/health` | Health check |
+| `GET` | `/version` | Service and dependency versions |
+| `GET` | `/info` | Get video metadata without downloading |
+| `POST` | `/download` | Download a video and upload to S3/MinIO |
 
-### `POST /download`
+---
 
-Download a YouTube video and upload to S3/MinIO.
+## 📥 Downloading Media
+
+Download a YouTube video and push it straight to MinIO/S3 by hitting `POST /download`.
 
 | Field | Type | Required | Default | Description |
 |-------|------|----------|---------|-------------|
@@ -101,7 +114,22 @@ curl -X POST http://localhost:5002/download \
      }'
 ```
 
-**Response:**
+---
+
+## ℹ️ Fetching Metadata
+
+Get a video's details without downloading anything.
+
+```bash
+curl "http://localhost:5002/info?url=https://youtu.be/V8o6ItwYJkE"
+```
+
+---
+
+## 📊 Sample Response
+
+All payload endpoints return a standardized JSON structure. Here is the response for a successful download:
+
 ```json
 [{
   "code": 200,
@@ -110,12 +138,12 @@ curl -X POST http://localhost:5002/download \
   "response": {
     "media": {
       "title": "Video Title",
-      "media_url": "http://...:9000/bucket/podcasts/Video%20Title.mp4",
+      "media_url": "http://...:9000/your-bucket-name/podcasts/Video%20Title.mp4",
       "duration": 120,
       "resolution": "1280x720",
       "filesize": 12345678,
       "quality": "720p",
-      "s3_bucket": "your-bucket",
+      "s3_bucket": "your-bucket-name",
       "s3_key": "podcasts/Video Title.mp4"
     }
   },
@@ -125,53 +153,18 @@ curl -X POST http://localhost:5002/download \
 
 ---
 
-### `GET /info?url=...`
-
-Get video metadata without downloading.
-
-```bash
-curl "http://localhost:5002/info?url=https://youtu.be/V8o6ItwYJkE"
-```
-
-**Response:**
-```json
-{
-  "code": 200,
-  "response": {
-    "title": "Video Title",
-    "duration": 120,
-    "uploader": "Channel Name",
-    "view_count": 1000000,
-    "thumbnail": "https://...",
-    "available_qualities": ["best", "1080p", "720p", "480p", "360p", "audio_only"]
-  }
-}
-```
+## 🖥️ System Requirements
+- **Docker Desktop** (Windows, macOS, or Linux)
+- **CPU**: Any modern x86_64 or ARM64
+- **RAM**: 1 GB available 
+- **Storage**: Sufficient MinIO/S3 storage for downloaded videos!
+- **Network**: Internet access to `youtube.com`
 
 ---
 
-### `GET /health`
+## 🔧 Configuration
 
-Health check endpoint.
-
-```bash
-curl http://localhost:5002/health
-# {"status": "healthy", "service": "youtube-download-service", "version": "1.0.0"}
-```
-
-### `GET /version`
-
-Service and dependency versions.
-
-```bash
-curl http://localhost:5002/version
-# {"service_version": "1.0.0", "yt_dlp_version": "2024.12.23", "python_version": "Python 3.10.x"}
-```
-
----
-
-## ⚙️ Environment Variables
-
+**Environment Variables:**
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `S3_ENDPOINT_URL` | ❌ | `http://host.docker.internal:9000` | MinIO/S3 endpoint |
@@ -179,6 +172,45 @@ curl http://localhost:5002/version
 | `S3_SECRET_KEY` | ✅ | — | S3 secret key |
 | `S3_BUCKET_NAME` | ❌ | `yt-downloads` | Default bucket name |
 | `GUNICORN_WORKERS` | ❌ | `2` | Number of Gunicorn workers |
+
+---
+
+## 🚀 Deploy to Production
+
+### Option 1: Docker Hub (CI/CD Automated)
+This repository includes a GitHub Actions workflow that automatically builds and securely pushes to Docker Hub on every push to the `main` branch.
+
+**Setup Instructions:**
+1. Go to your GitHub repo → Settings → Secrets and variables → Actions
+2. Add these repository secrets:
+   - `DOCKERHUB_USERNAME` 
+   - `DOCKERHUB_TOKEN` ([Create a Personal Access Token here](https://hub.docker.com/settings/security))
+3. Push new code to `main` and watch GitHub Actions do the rest!
+
+### Option 2: Manual Terminal Push
+```bash
+docker build -t mehakxsandhu/youtube-download-api:latest .
+docker push mehakxsandhu/youtube-download-api:latest
+```
+
+---
+
+## 🔄 Integration with Other Services
+
+Add this snippet to your root `docker-compose.yml` to seamlessly connect the API to your existing stack:
+
+```yaml
+services:
+  youtube-download-api:
+    image: mehakxsandhu/youtube-download-api:latest
+    container_name: youtube-download-api
+    ports:
+      - "5002:5002"
+    env_file:
+      - .env
+    restart: unless-stopped
+```
+*Note: Make sure your `S3_ENDPOINT_URL` correctly reaches your storage backend. If using a `minio` service on the same docker network, you should set `S3_ENDPOINT_URL=http://minio:9000`.*
 
 ---
 
@@ -194,9 +226,7 @@ When calling from **n8n** running in Docker, use `http://host.docker.internal:50
 | **Timeout** | `600000` (10 min — important for long videos!) |
 
 ### Dynamic Body Example
-
 Unlike a basic `yt-dlp` script, this service allows dynamic configuration per request. You can map n8n variables to the payload:
-
 ```json
 {
   "url": "={{ $('On form submission').first().json['What is the video URL?'] }}",
@@ -206,39 +236,61 @@ Unlike a basic `yt-dlp` script, this service allows dynamic configuration per re
 }
 ```
 
-**Why this is better for automation:**
-- **Dynamic Routing**: Save videos to different S3 buckets/folders based on the submitter (using `bucket` and `path_prefix`).
-- **Format Control**: Dynamically request `audio_only` for podcasts or specific resolutions.
-- **Always Available**: Returns a direct accessible `media_url` immediately after uploading so the next n8n node can use the file.
+---
+
+## 📁 Project Structure
+```text
+youtube-download-api/
+├── .github/workflows/         # CI/CD pipelines
+│   └── docker-publish.yml
+├── youtube_download_service/  # Source code folder
+│   ├── app.py                 # Core Flask API (yt-dlp + boto3 integration)
+│   ├── Dockerfile             # Python 3.10 slim + ffmpeg
+│   ├── requirements.txt       # Pinned production dependencies
+│   └── start.sh               # Auto-updates yt-dlp and boots gunicorn
+├── docker-compose.yml         # Container orchestration
+├── .env.example               # Template for S3 credentials
+├── LICENSE                    # MIT License
+├── .gitignore
+└── .dockerignore
+```
 
 ---
 
-## 🐳 Docker Hub
+## 🤝 Contributing & Support
 
-```bash
-# Pull the latest image
-docker pull mehakxsandhu/youtube-download-api:latest
+If you encounter a bug, have a feature request, or need help integrating the API:
+1. Please check the existing Issues page on GitHub.
+2. If your problem isn't listed, open a new issue containing your Docker logs, the API request body, and expected output.
+3. Pull requests are always welcome!
 
-# Or pull a specific version
-docker pull mehakxsandhu/youtube-download-api:1.0.0
-```
-
-**Supported platforms:** `linux/amd64`, `linux/arm64`
+**Contact Me:**
+- 📧 **Email:** `mehaksandhudev@gmail.com`
+- 🌐 **Portfolio:** [www.mehak-sandhu.in](https://www.mehak-sandhu.in)
 
 ---
 
-## 🛠️ Development
+## 🛠️ Troubleshooting & FAQ
 
+**1. "Could not connect to the endpoint URL" / MinIO Connection Refused** 
+If the API fails to upload your video with a `500` error, it cannot reach your S3 backend. Make sure your MinIO container is actually running! If you are using Windows Docker Desktop, `host.docker.internal:9000` perfectly maps to your host machine's `localhost`. If you are on Linux, you may need to add `extra_hosts: - "host.docker.internal:host-gateway"` to your `docker-compose.yml` or use the direct IP of your host.
+
+**2. Video Downloads Timeout in n8n**
+Heavy videos take time to process and upload. Make sure your HTTP request node in n8n has the **Timeout** setting increased to at least `600000` ms (10 minutes) so it doesn't drop the connection while yt-dlp is working.
+
+**3. Port 5002 is already in use** 
+You can map it to any available port by modifying your Docker run command. For example, to run the service on port `8080`: 
 ```bash
-cd youtube_download_service
-pip install -r requirements.txt
-python app.py
+docker run -d -p 8080:5002 mehakxsandhu/youtube-download-api:latest
 ```
 
-The server starts on `http://localhost:5002`.
+**4. Container Crashes on Massive Videos (4K/8K)**
+When downloading huge videos (e.g., 5GB+), the container temporarily stores the video file locally before uploading it to MinIO. If your Docker instance runs out of internal storage space during the download, the container will crash. To prevent this, simply map a high-capacity local directory to the container's temporary folder in your run command:
+```bash
+docker run -d -p 5002:5002 -v /mnt/my_huge_drive:/tmp mehakxsandhu/youtube-download-api:latest
+```
 
 ---
 
 ## 📄 License
-
-[MIT](LICENSE) © [mehaksandhudev](https://github.com/mehaksandhudev)
+MIT License — see [LICENSE](LICENSE) for details.
