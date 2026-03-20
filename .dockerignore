@@ -1,0 +1,12 @@
+.git
+.gitignore
+.env
+.env.*
+*.md
+LICENSE
+.github/
+.vscode/
+.idea/
+__pycache__/
+*.pyc
+docker-compose*.yml

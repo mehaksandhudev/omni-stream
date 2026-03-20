@@ -1,144 +1,138 @@
-# YouTube Download Service - Docker Instructions
+# YouTube Download Service — Docker Guide
 
-This guide provides steps to start the **YouTube Download Service** using Docker.
+Detailed instructions for running the YouTube Download Service in Docker.
 
 ## Prerequisites
 
-- **Docker** and **Docker Compose** must be installed on your system.
-- **MinIO** must be running and accessible at `http://host.docker.internal:9000`
+- **Docker** and **Docker Compose** installed
+- **MinIO** or any S3-compatible storage running and accessible
 
-## Docker Compose Configuration
+## Setup
 
-Ensure your `docker-compose.yml` file contains the following configuration:
+### 1. Environment Configuration
+
+Create a `.env` file in the project root (or copy from `.env.example`):
+
+```env
+S3_ENDPOINT_URL=http://host.docker.internal:9000
+S3_ACCESS_KEY=your-access-key-here
+S3_SECRET_KEY=your-secret-key-here
+S3_BUCKET_NAME=your-bucket-name
+```
+
+> ⚠️ **Never commit your `.env` file to version control!** It is already in `.gitignore`.
+
+### 2. Docker Compose
 
 ```yaml
-youtube-download-service:
-  build: ./youtube_download_service
-  container_name: youtube-download-service
-  ports:
-    - "5002:5002"
-  environment:
-    - S3_ENDPOINT_URL=http://host.docker.internal:9000
-    - S3_ACCESS_KEY=YoSGcgLbihsWi2JrgHOt
-    - S3_SECRET_KEY=3GkWozKbNGwZ8BnFdBUXrpIk1WmS381YQzD2DpUK
-    - S3_BUCKET_NAME=nca-toolkit
-  restart: always
+services:
+  youtube-download-service:
+    build: ./youtube_download_service
+    container_name: youtube-download-service
+    ports:
+      - "5002:5002"
+    env_file:
+      - .env
+    restart: unless-stopped
 ```
 
-## Starting the Service
-
-### 1. Build and Start via Docker Compose
-
-Open your terminal in the root directory (where `docker-compose.yml` is located) and run:
+### 3. Build & Start
 
 ```bash
-docker-compose up -d --build youtube-download-service
+docker-compose up -d --build
 ```
 
-- `-d`: Runs the container in the background (detached mode).
-- `--build`: Forces a rebuild of the image (useful if you've made code changes).
-- `youtube-download-service`: Specifies that we only want to start this specific service.
-
-If you want to view the logs to ensure everything is running correctly:
-
+View logs:
 ```bash
 docker-compose logs -f youtube-download-service
 ```
 
-### 2. Verify the Service is Running
+### 4. Verify
 
-The service is configured to run on port **5002**. You can verify it's active by sending a health check request.
-
-**PowerShell Example:**
-```powershell
-Invoke-RestMethod -Uri "http://localhost:5002/health" -Method GET
+```bash
+curl http://localhost:5002/health
+# {"status": "healthy", "service": "youtube-download-service", "version": "1.0.0"}
 ```
 
-## Using the Service
+## API Usage
 
-### API Endpoint
+### Download a Video (default best quality)
 
-| Method | URL | Content-Type |
-|--------|-----|--------------|
-| POST | `http://localhost:5002/download` | `application/json` |
-
-### Request Body
-
-```json
-{
-  "url": "https://youtu.be/WNSZ6xouNv4?si=ZEt-IsfGIL7-PUZ3"
-}
-```
-
-### Example Request
-
-**PowerShell:**
-```powershell
-$body = @{ url = "https://youtu.be/WNSZ6xouNv4?si=ZEt-IsfGIL7-PUZ3" } | ConvertTo-Json
-Invoke-RestMethod -Uri "http://localhost:5002/download" -Method POST -ContentType "application/json" -Body $body
-```
-
-**Curl:**
 ```bash
 curl -X POST http://localhost:5002/download \
      -H "Content-Type: application/json" \
-     -d '{"url": "https://youtu.be/WNSZ6xouNv4?si=ZEt-IsfGIL7-PUZ3"}'
+     -d '{"url": "https://youtu.be/VIDEO_ID"}'
 ```
 
-### Response Format
+### Download at 720p
 
-```json
-[
-  {
-    "build_number": 1,
-    "code": 200,
-    "endpoint": "/download",
-    "id": "2026-01-24T00:12:00.123+05:30",
-    "job_id": "uuid-here",
-    "message": "success",
-    "response": {
-      "media": {
-        "audio_codec": "mp4a.40.2",
-        "duration": 120,
-        "ext": "mp4",
-        "filesize": 12345678,
-        "fps": 30,
-        "height": 1080,
-        "media_url": "http://host.docker.internal:9000/nca-toolkit/Video%20Title.mp4",
-        "resolution": "1920x1080",
-        "title": "Video Title",
-        "width": 1920
-      }
-    },
-    "run_time": 45.23,
-    "total_time": 45.23
-  }
-]
+```bash
+curl -X POST http://localhost:5002/download \
+     -H "Content-Type: application/json" \
+     -d '{"url": "https://youtu.be/VIDEO_ID", "quality": "720p"}'
+```
+
+### Download Audio Only (MP3)
+
+```bash
+curl -X POST http://localhost:5002/download \
+     -H "Content-Type: application/json" \
+     -d '{"url": "https://youtu.be/VIDEO_ID", "quality": "audio_only"}'
+```
+
+### Download to Custom Bucket & Folder
+
+```bash
+curl -X POST http://localhost:5002/download \
+     -H "Content-Type: application/json" \
+     -d '{
+       "url": "https://youtu.be/VIDEO_ID",
+       "bucket": "my-podcasts",
+       "path_prefix": "episodes/season1/"
+     }'
+```
+
+### Get Video Info (No Download)
+
+```bash
+curl "http://localhost:5002/info?url=https://youtu.be/VIDEO_ID"
+```
+
+### PowerShell Examples
+
+```powershell
+# Health check
+Invoke-RestMethod -Uri "http://localhost:5002/health" -Method GET
+
+# Download video
+$body = @{
+    url = "https://youtu.be/VIDEO_ID"
+    quality = "720p"
+} | ConvertTo-Json
+Invoke-RestMethod -Uri "http://localhost:5002/download" -Method POST -ContentType "application/json" -Body $body
 ```
 
 ## n8n Integration
-
-When using this service from n8n's HTTP Request node:
 
 | Setting | Value |
 |---------|-------|
 | Method | POST |
 | URL | `http://host.docker.internal:5002/download` |
 | Body Content Type | JSON |
-| **Timeout** | `600000` (10 minutes - important for long videos!) |
-
-> **Note:** The service has a 600-second Gunicorn timeout to handle long video downloads without timing out.
+| **Timeout** | `600000` (10 min — important for long videos!) |
 
 ## Stopping the Service
 
-To stop the service, run:
-
 ```bash
-docker-compose stop youtube-download-service
+docker-compose stop youtube-download-service   # stop
+docker-compose down                             # stop & remove
 ```
 
-To stop and remove the container:
+## Troubleshooting
 
-```bash
-docker-compose down
-```
+| Issue | Solution |
+|-------|----------|
+| `403 Forbidden` from YouTube | Container auto-updates yt-dlp on start; restart to get latest |
+| Connection refused to MinIO | Check `S3_ENDPOINT_URL`; use `host.docker.internal` from Docker |
+| Timeout error | Increase Gunicorn timeout (default 600s) or check network |
+| "Invalid YouTube URL" | Only `youtube.com`, `youtu.be`, `music.youtube.com` URLs accepted |

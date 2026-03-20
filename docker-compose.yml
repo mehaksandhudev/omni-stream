@@ -1,36 +1,15 @@
-version: '3.8'
-
 services:
-  alignment-service:
-    build: ./alignment_service
-    container_name: alignment-service
-    ports:
-      - "5000:5000"
-    environment:
-      - WHISPER_MODEL=base
-    restart: always
-
-  face-detection-service:
-    build: ./face_detection_service
-    container_name: face-detection-service
-    ports:
-      - "5001:5001"
-    restart: always
-
   youtube-download-service:
     build: ./youtube_download_service
     container_name: youtube-download-service
     ports:
       - "5002:5002"
-    environment:
-      - S3_ENDPOINT_URL=http://host.docker.internal:9000
-      - S3_ACCESS_KEY=YoSGcgLbihsWi2JrgHOt
-      - S3_SECRET_KEY=3GkWozKbNGwZ8BnFdBUXrpIk1WmS381YQzD2DpUK
-      - S3_BUCKET_NAME=nca-toolkit
-    restart: always
-
-# Network configuration
-# If you want these to be on the same network as your existing n8n/minio, 
-# you might need to use 'external: true' or define standard bridge.
-# By default, n8n on host can access these via http://host.docker.internal:5000 and 5001
-
+    env_file:
+      - .env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
