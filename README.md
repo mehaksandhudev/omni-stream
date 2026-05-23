@@ -1,4 +1,4 @@
-# 🎬 YouTube Media Ingestion Service
+# OmniStream: Containerized YouTube Media Ingestion Service
 
 [![Docker Hub](https://img.shields.io/docker/pulls/mehakxsandhu/youtube-download-api?style=flat-square&logo=docker)](https://hub.docker.com/r/mehakxsandhu/youtube-download-api)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
