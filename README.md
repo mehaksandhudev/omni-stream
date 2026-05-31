@@ -1,5 +1,8 @@
 # OmniStream: Containerized YouTube Media Ingestion Service
 
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-%E2%98%95-FFDD00?style=flat-square&logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/mehaksandhudev)
+
+
 [![Docker Hub](https://img.shields.io/docker/pulls/mehakxsandhu/youtube-download-api?style=flat-square&logo=docker)](https://hub.docker.com/r/mehakxsandhu/youtube-download-api)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 [![GitHub Actions](https://img.shields.io/github/actions/workflow/status/mehaksandhudev/youtube-download-api/docker-publish.yml?style=flat-square&logo=github)](https://github.com/mehaksandhudev/youtube-download-api/actions)
