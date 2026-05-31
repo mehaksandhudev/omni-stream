@@ -1,6 +1,5 @@
 # OmniStream: Containerized YouTube Media Ingestion Service
 
-[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-%E2%98%95-FFDD00?style=flat-square&logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/mehaksandhudev)
 
 
 [![Docker Hub](https://img.shields.io/docker/pulls/mehakxsandhu/youtube-download-api?style=flat-square&logo=docker)](https://hub.docker.com/r/mehakxsandhu/youtube-download-api)
@@ -293,6 +292,16 @@ When downloading huge videos (e.g., 5GB+), the container temporarily stores the 
 docker run -d -p 5002:5002 -v /mnt/my_huge_drive:/tmp mehakxsandhu/youtube-download-api:latest
 ```
 
+
+---
+
+## ? Support
+
+If this project helped you, consider buying me a coffee!
+
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-%E2%98%95-FFDD00?style=flat-square&logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/mehaksandhudev)
+
+---
 ---
 
 ## 📄 License
